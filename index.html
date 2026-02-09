@@ -8,9 +8,9 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Press Start 2P', cursive; background-color: #050510; touch-action: none; color: white; }
         
-        /* SYNTHWAVE GRID & STARS */
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: linear-gradient(180deg, #0d0221 0%, #2a0845 100%); transition: background 0.3s; }
-        .star { position: absolute; background: #fff; z-index: 1; border-radius: 50%; opacity: 0.8; }
+        /* BACKGROUND */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: linear-gradient(180deg, #0d0221 0%, #2a0845 100%); }
+        .star { position: absolute; background: #fff; z-index: 1; border-radius: 50%; }
         #grid {
             position: absolute; width: 200%; height: 200%;
             background-image: linear-gradient(to right, rgba(255, 105, 180, 0.1) 1px, transparent 1px),
@@ -20,47 +20,50 @@
         }
         @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
 
-        /* FLOATING HEARTS DECORATION */
-        .float-heart { position: absolute; bottom: -50px; color: rgba(255, 77, 109, 0.4); z-index: 2; pointer-events: none; animation: floatUp 6s linear infinite; }
-        @keyframes floatUp { to { transform: translateY(-110vh) rotate(360deg); } }
-
-        /* FIXED TIMER */
+        /* TIMER */
         #global-timer {
             position: fixed; top: 0; width: 100%; text-align: center;
             z-index: 200; font-size: 8px; text-shadow: 1px 1px #ff4d6d;
-            pointer-events: none; padding: 15px 0; background: rgba(5, 5, 16, 0.6);
+            padding: 15px 0; background: rgba(5, 5, 16, 0.8);
             border-bottom: 2px solid rgba(255, 77, 109, 0.3);
         }
 
-        /* OVERLAY / INTRO */
+        /* OVERLAY */
         #overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: #222; z-index: 100; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; text-align: center;
+            justify-content: center; align-items: center;
             background-image: url('https://mir-s3-cdn-cf.behance.net/project_modules/source/533a7941521691.57a9a52dcc07a.gif');
             background-size: cover; background-position: center;
         }
 
-        /* GAME CARD */
+        /* CARD */
         .card { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: #fff; padding: 25px; border: 6px solid #000; 
-            color: #000; width: 90%; max-width: 360px; display: none; z-index: 50; 
-            box-shadow: 10px 10px 0px #ff4d6d; text-align: center; border-radius: 2px;
+            color: #000; width: 85%; max-width: 350px; display: none; z-index: 50; 
+            box-shadow: 10px 10px 0px #ff4d6d; text-align: center;
         }
         
         h1 { font-size: 8px; line-height: 1.8; margin-bottom: 20px; color: #000; }
-        button { font-family: 'Press Start 2P', cursive; cursor: pointer; border: 4px solid #000; padding: 12px; font-size: 10px; box-shadow: 4px 4px 0px #000; }
-        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
         
-        #yes-btn { background: #ff4d6d; color: white; width: 100%; margin-bottom: 15px; }
-        #no-btn { background: #444; color: white; width: 80px; position: fixed; transition: 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* WRAPPER FOR BUTTONS */
+        #ui-wrap { position: relative; min-height: 160px; }
+        
+        button { font-family: 'Press Start 2P', cursive; cursor: pointer; border: 4px solid #000; padding: 12px; font-size: 10px; box-shadow: 4px 4px 0px #000; }
+        
+        #yes-btn { background: #ff4d6d; color: white; width: 100%; position: relative; z-index: 60; margin-bottom: 20px; }
+        #no-btn { 
+            background: #444; color: white; width: 80px; 
+            position: absolute; left: 50%; transform: translateX(-50%); top: 60px;
+            transition: all 0.15s ease-out; z-index: 55;
+        }
 
         /* GAME CANVAS */
-        #game-container { display: none; margin-top: 10px; }
-        canvas { background: #000; border: 4px solid #ff4d6d; display: block; margin: 0 auto; width: 250px; height: 250px; image-rendering: pixelated; box-shadow: 0 0 15px rgba(255, 77, 109, 0.5); }
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; justify-items: center; }
-        .ctrl-btn { width: 50px; height: 50px; background: #eee; border: 3px solid #000; display: flex; align-items: center; justify-content: center; color: black; font-size: 14px; border-radius: 8px; }
+        #game-container { display: none; margin-top: 10px; z-index: 70; position: relative; }
+        canvas { background: #000; border: 4px solid #ff4d6d; display: block; margin: 0 auto; width: 230px; height: 230px; }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .ctrl-btn { width: 50px; height: 50px; background: #eee; border: 3px solid #000; display: flex; align-items: center; justify-content: center; color: black; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -69,17 +72,19 @@
     <div id="global-timer">V-DAY: 00D 00H 00M 00S</div>
 
     <div id="overlay">
-        <button onclick="startEverything()" style="background: white; color: #ff4d6d; animation: pulse 1.5s infinite;">INSERT COIN</button>
+        <button onclick="startEverything()">INSERT COIN</button>
     </div>
 
     <div class="card" id="main-card">
         <h1 id="msg">SYSTEM ERROR: LOVE.EXE FOUND.<br>WILL YOU BE MY SANCTUARY?</h1>
-        <div id="btn-wrap">
+        
+        <div id="ui-wrap">
             <button id="yes-btn">YES</button>
             <button id="no-btn">NO</button>
         </div>
+        
         <div id="game-container">
-            <p id="level-text" style="font-size:7px; color:#ff4d6d; margin-bottom:10px;">LVL 1: CATCH THE KISSES</p>
+            <p id="level-text" style="font-size:7px; color:#ff4d6d; margin-bottom:10px;">LVL 1</p>
             <canvas id="pacman" width="250" height="250"></canvas>
             <div class="controls">
                 <div></div><button class="ctrl-btn" ontouchstart="changeDir(0,-1)" onmousedown="changeDir(0,-1)">↑</button><div></div>
@@ -90,38 +95,44 @@
         </div>
     </div>
 
-    <audio id="player" loop preload="auto"><source src="sanctuary.mp3" type="audio/mpeg"></audio>
+    <audio id="player" loop preload="auto"><source src="Sanctuary.mp3" type="audio/mpeg"></audio>
 
     <script>
         const audio = document.getElementById('player');
         const noBtn = document.getElementById('no-btn');
-        const bg = document.getElementById('bg-canvas');
+        const yesBtn = document.getElementById('yes-btn');
+        const uiWrap = document.getElementById('ui-wrap');
+        const gameContainer = document.getElementById('game-container');
         
         function startEverything() {
-            audio.play().catch(e => console.log("Audio unlock required"));
+            audio.play().catch(e => console.log("Audio logic ready"));
             document.getElementById('overlay').style.display = 'none'; 
             document.getElementById('main-card').style.display = 'block'; 
-            
-            // Set initial position of NO button
-            const rect = document.getElementById('yes-btn').getBoundingClientRect();
-            noBtn.style.top = (rect.bottom + 25) + "px";
-            noBtn.style.left = rect.left + "px";
-            noBtn.style.width = rect.width + "px";
         }
 
         // NO BUTTON ESCAPE
-        const teleportNo = (e) => {
-            e.preventDefault();
-            const btnWidth = noBtn.offsetWidth;
-            const btnHeight = noBtn.offsetHeight;
-            const randomX = Math.floor(Math.random() * (window.innerWidth - btnWidth - 60)) + 30;
-            const randomY = Math.floor(Math.random() * (window.innerHeight - btnHeight - 60)) + 30;
-            noBtn.style.left = randomX + "px";
-            noBtn.style.top = randomY + "px";
-            noBtn.style.width = "80px";
+        function moveNo() {
+            const maxX = uiWrap.clientWidth - noBtn.clientWidth;
+            const maxY = uiWrap.clientHeight - noBtn.clientHeight;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+            noBtn.style.transform = 'none'; // Clear the initial centering
+        }
+
+        noBtn.addEventListener('mouseover', moveNo);
+        noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNo(); });
+
+        // YES BUTTON - START GAME
+        yesBtn.onclick = function() {
+            uiWrap.style.display = 'none';
+            gameContainer.style.display = 'block';
+            gameRunning = true; 
+            initLevel(1); 
+            draw();
         };
-        noBtn.addEventListener('mouseover', teleportNo);
-        noBtn.addEventListener('touchstart', teleportNo);
 
         // TIMER
         function updateT() {
@@ -136,106 +147,68 @@
         const ctx = canvas.getContext('2d');
         let currentLevel = 1, gameRunning = false;
         let heart = { x: 125, y: 125, dx: 0, dy: 0 };
-        let dots = [], enemies = [], obstacles = [], trail = [];
-        let player2 = { x: 150, y: 125 };
+        let dots = [], enemies = [], obstacles = [];
 
         function initLevel(lvl) {
             currentLevel = lvl;
             heart.x = 125; heart.y = 125; heart.dx = 0; heart.dy = 0;
-            dots = []; enemies = []; obstacles = []; trail = [];
-            
-            // Background Flash
-            bg.style.background = "#ff4d6d";
-            setTimeout(() => { bg.style.background = "linear-gradient(180deg, #0d0221 0%, #2a0845 100%)"; }, 150);
-
+            dots = []; enemies = []; obstacles = [];
             if(lvl <= 5) {
-                const msgs = ["", "CATCH THE KISSES", "AVOID THE SKULLS", "WATCH THE GHOSTS", "YOU'RE DOING GREAT!", "ALMOST THERE!"];
-                document.getElementById('level-text').innerText = `LVL ${lvl}: ${msgs[lvl]}`;
+                document.getElementById('level-text').innerText = `LEVEL ${lvl}`;
                 for(let i=0; i<(2+lvl); i++) dots.push({x: Math.random()*200+25, y: Math.random()*200+25});
                 if(lvl >= 2) for(let i=0; i<lvl; i++) obstacles.push({x: Math.random()*200+25, y: Math.random()*200+25});
                 if(lvl >= 3) for(let i=0; i<(lvl-2); i++) enemies.push({x: 10, y: 10, speed: 0.007 + (lvl * 0.002)});
             } else {
-                document.getElementById('level-text').innerText = "FINAL LEVEL: FIND YOUR PLAYER 2";
+                document.getElementById('level-text').innerText = "FINAL LEVEL: MEET P2";
             }
         }
 
-        function changeDir(x, y) { heart.dx = x*3.2; heart.dy = y*3.2; }
+        function changeDir(x, y) { heart.dx = x*3.5; heart.dy = y*3.5; }
 
         function draw() {
             if(!gameRunning) return;
             ctx.fillStyle = "black"; ctx.fillRect(0,0,250,250);
-            
-            // Draw Trail
-            trail.push({x: heart.x, y: heart.y, alpha: 1});
-            if(trail.length > 10) trail.shift();
-            trail.forEach((t, i) => {
-                ctx.fillStyle = `rgba(255, 77, 109, ${i/10})`;
-                ctx.beginPath(); ctx.arc(t.x, t.y, 3, 0, Math.PI*2); ctx.fill();
-            });
-
             ctx.font = "16px serif";
+
             dots.forEach((d, i) => {
                 ctx.fillText("💋", d.x, d.y);
-                if(Math.hypot(heart.x-d.x, heart.y-d.y) < 18) dots.splice(i, 1);
+                if(Math.hypot(heart.x-d.x, heart.y-d.y) < 20) dots.splice(i, 1);
             });
-
             obstacles.forEach(o => {
                 ctx.fillText("💀", o.x, o.y);
-                if(Math.hypot(heart.x-o.x, heart.y-o.y) < 15) initLevel(currentLevel);
+                if(Math.hypot(heart.x-o.x, heart.y-o.y) < 18) initLevel(currentLevel);
             });
-
             enemies.forEach(e => {
                 ctx.fillText("💔", e.x, e.y);
                 e.x += (heart.x - e.x) * e.speed; e.y += (heart.y - e.y) * e.speed;
-                if(Math.hypot(heart.x-e.x, heart.y-e.y) < 15) initLevel(currentLevel);
+                if(Math.hypot(heart.x-e.x, heart.y-e.y) < 18) initLevel(currentLevel);
             });
 
             if(currentLevel === 6) {
-                // P2 Glow
-                ctx.shadowBlur = 15; ctx.shadowColor = "#ff4d6d";
-                ctx.fillText("❤️", player2.x, player2.y);
-                ctx.shadowBlur = 0;
+                ctx.fillText("❤️", 150, 125);
                 ctx.fillStyle = "white"; ctx.font = "6px 'Press Start 2P'";
-                ctx.fillText("P2", player2.x, player2.y - 12);
-                if(Math.hypot(heart.x-player2.x, heart.y-player2.y) < 15) {
+                ctx.fillText("P2", 150, 110);
+                if(Math.hypot(heart.x-150, heart.y-125) < 20) {
                     gameRunning = false;
                     document.getElementById('msg').innerHTML = "YOU WILL ALWAYS BE<br>MY PLAYER 2.<br><br>HAPPY VALENTINE'S DAY!";
                     return;
                 }
             }
 
-            ctx.font = "16px serif";
             ctx.fillText("❤️", heart.x, heart.y);
             heart.x += heart.dx; heart.y += heart.dy;
             if(heart.x > 250) heart.x = 0; if(heart.x < 0) heart.x = 250;
             if(heart.y > 250) heart.y = 0; if(heart.y < 0) heart.y = 250;
-
             if(dots.length === 0 && currentLevel < 6) initLevel(currentLevel + 1);
             requestAnimationFrame(draw);
         }
 
-        document.getElementById('yes-btn').onclick = () => {
-            document.getElementById('btn-wrap').style.display = 'none';
-            noBtn.style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
-            gameRunning = true; initLevel(1); draw();
-        };
-
-        // Stars & Floating Hearts
-        for(let i=0; i<35; i++){
+        for(let i=0; i<30; i++){
             let s = document.createElement('div'); s.className='star';
             s.style.width=s.style.height=Math.random()*3+'px';
             s.style.left=Math.random()*100+'vw'; s.style.top=Math.random()*100+'vh';
-            bg.appendChild(s);
+            document.getElementById('bg-canvas').appendChild(s);
         }
-        setInterval(() => {
-            let h = document.createElement('div'); h.className='float-heart';
-            h.innerHTML = ['❤️','💖','✨','🌸'][Math.floor(Math.random()*4)];
-            h.style.left = Math.random()*100+'vw';
-            h.style.fontSize = Math.random()*20+10+'px';
-            document.body.appendChild(h);
-            setTimeout(() => h.remove(), 6000);
-        }, 1000);
     </script>
 </body>
 </html>
