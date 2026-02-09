@@ -8,10 +8,9 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Press Start 2P', cursive; background-color: #050510; touch-action: none; color: white; }
         
-        /* SYNTHWAVE GRID BACKGROUND */
+        /* SYNTHWAVE GRID */
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: linear-gradient(180deg, #0d0221 0%, #2a0845 100%); }
         .star { position: absolute; background: #fff; z-index: 1; border-radius: 50%; }
-        
         #grid {
             position: absolute; width: 200%; height: 200%;
             background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
@@ -19,12 +18,9 @@
             background-size: 50px 50px; transform: perspective(500px) rotateX(60deg);
             bottom: -60%; left: -50%; animation: moveGrid 3s linear infinite;
         }
-        @keyframes moveGrid { 
-            from { transform: perspective(500px) rotateX(60deg) translateY(0); } 
-            to { transform: perspective(500px) rotateX(60deg) translateY(50px); } 
-        }
+        @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
 
-        /* INTRO OVERLAY */
+        /* INTRO */
         #overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: #222; z-index: 100; display: flex; flex-direction: column; 
@@ -34,9 +30,6 @@
         }
         #overlay::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 77, 109, 0.6); z-index: -1; }
 
-        .timer-display { font-size: 10px; margin-bottom: 20px; line-height: 1.5; text-shadow: 2px 2px #000; }
-        
-        /* MAIN CARD */
         .card { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: #fff; padding: 20px; border: 6px solid #000; 
@@ -45,7 +38,7 @@
         }
         
         h1 { font-size: 9px; line-height: 1.6; margin-bottom: 20px; text-transform: uppercase; }
-        button { font-family: 'Press Start 2P', cursive; cursor: pointer; border: 4px solid #000; padding: 12px; font-size: 10px; transition: 0.1s; }
+        button { font-family: 'Press Start 2P', cursive; cursor: pointer; border: 4px solid #000; padding: 12px; font-size: 10px; }
         
         #yes-btn { background: #ff4d6d; color: white; width: 100%; margin-bottom: 10px; }
         #no-btn { background: #444; color: white; width: 100%; }
@@ -53,34 +46,26 @@
         /* MINI GAME */
         #game-container { display: none; margin-top: 10px; }
         canvas { background: #000; border: 4px solid #ff4d6d; display: block; margin: 0 auto; width: 250px; height: 250px; image-rendering: pixelated; }
-        
         .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; justify-items: center; }
         .ctrl-btn { width: 50px; height: 50px; background: #eee; border: 3px solid #000; display: flex; align-items: center; justify-content: center; color: black; font-size: 12px; -webkit-tap-highlight-color: transparent; }
-
-        #audio-debug { font-size: 8px; color: #fff; position: fixed; bottom: 10px; width: 100%; text-align: center; z-index: 101; padding: 5px; }
+        #audio-debug { font-size: 8px; color: #fff; position: fixed; bottom: 10px; width: 100%; text-align: center; z-index: 101; }
     </style>
 </head>
 <body>
 
-    <div id="bg-canvas">
-        <div id="grid"></div>
-    </div>
+    <div id="bg-canvas"><div id="grid"></div></div>
 
     <div id="overlay">
-        <div id="countdown-intro" class="timer-display">INITIALIZING...</div>
+        <div id="countdown-intro" style="font-size:10px; margin-bottom:20px; text-shadow: 2px 2px #000;">INITIALIZING...</div>
         <button onclick="startEverything()" style="background: white; color: #ff4d6d;">INSERT COIN</button>
-        <p id="audio-debug">Checking Audio Sync...</p>
+        <p id="audio-debug">Waiting for Data...</p>
     </div>
 
     <div class="card" id="main-card">
-        <h1 id="msg">SYSTEM ERROR: LOVE DETECTED.<br><br>WILL YOU BE MY SANCTUARY?</h1>
-        <div id="btn-wrap">
-            <button id="yes-btn">YES</button>
-            <button id="no-btn">NO</button>
-        </div>
-        
+        <h1 id="msg">WILL YOU BE MY SANCTUARY?</h1>
+        <div id="btn-wrap"><button id="yes-btn">YES</button><button id="no-btn">NO</button></div>
         <div id="game-container">
-            <p id="level-text" style="font-size:8px; color:#ff4d6d; margin-bottom:10px;">LVL 1: COLLECT KISSES</p>
+            <p id="level-text" style="font-size:8px; color:#ff4d6d; margin-bottom:10px;">LVL 1</p>
             <canvas id="pacman" width="250" height="250"></canvas>
             <div class="controls">
                 <div></div><button class="ctrl-btn" onmousedown="changeDir(0,-1)" ontouchstart="changeDir(0,-1)">↑</button><div></div>
@@ -91,69 +76,51 @@
         </div>
     </div>
 
-    <audio id="player" loop preload="auto" crossorigin="anonymous">
-        <source src="sanctuary.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="player" loop preload="auto" crossorigin="anonymous"><source src="sanctuary.mp3" type="audio/mpeg"></audio>
 
     <script>
         const audio = document.getElementById('player');
         const debug = document.getElementById('audio-debug');
 
-        // Audio Reliability Logic
-        audio.oncanplaythrough = () => { debug.innerText = "Audio: Optimized"; };
-        audio.onerror = () => { 
-            debug.innerText = "⚠️ ERROR: sanctuary.mp3 not found on server!"; 
-            debug.style.color = "yellow"; 
-        };
-
         function startEverything() {
-            // Force Audio Play
-            audio.play().catch(e => {
-                debug.innerHTML = "TAP HERE TO FORCE AUDIO";
-                debug.style.background = "white"; debug.style.color = "black";
-                debug.onclick = () => { audio.play(); debug.style.display='none'; };
-            });
-
+            audio.play().catch(e => { debug.innerText = "TAP TO UNMUTE"; debug.onclick = () => audio.play(); });
             document.getElementById('overlay').style.display = 'none'; 
             document.getElementById('main-card').style.display = 'block'; 
         }
 
-        // Animated Stars
-        const bg = document.getElementById('bg-canvas');
-        for(let i=0; i<45; i++){
+        // Stars
+        for(let i=0; i<40; i++){
             let s = document.createElement('div'); s.className='star';
-            let sz = Math.random()*3;
-            s.style.width = s.style.height = sz+'px';
-            s.style.left = Math.random()*100+'vw'; s.style.top = Math.random()*100+'vh';
-            bg.appendChild(s);
+            s.style.width=s.style.height=Math.random()*3+'px';
+            s.style.left=Math.random()*100+'vw'; s.style.top=Math.random()*100+'vh';
+            document.getElementById('bg-canvas').appendChild(s);
         }
 
-        // Global Countdown
-        function updateT() {
-            let diff = new Date(2026, 1, 14) - new Date();
-            let d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-            document.getElementById('countdown-intro').innerHTML = `V-DAY COUNTDOWN:<br>${d}D ${h}H ${m}M ${s}S`;
-        }
-        setInterval(updateT, 1000); updateT();
-
-        // --- MINI GAME ENGINE ---
+        // Game Logic
         const canvas = document.getElementById('pacman');
         const ctx = canvas.getContext('2d');
         let currentLevel = 1, gameRunning = false;
         let heart = { x: 125, y: 125, dx: 0, dy: 0 };
-        let dots = [], enemies = [];
+        let dots = [], enemies = [], obstacles = [];
+        let player2 = { x: -50, y: 125 }; // Hidden initially
 
         function initLevel(lvl) {
             currentLevel = lvl;
             heart.x = 125; heart.y = 125; heart.dx = 0; heart.dy = 0;
-            dots = []; enemies = [];
-            document.getElementById('level-text').innerText = `LEVEL ${lvl}: ${lvl < 5 ? 'COLLECT KISSES' : 'FINAL SANCTUARY'}`;
+            dots = []; enemies = []; obstacles = [];
             
-            for(let i=0; i<(3+lvl); i++) dots.push({x: Math.random()*210+20, y: Math.random()*210+20});
-            if(lvl > 1) {
-                for(let i=0; i<(lvl-1); i++) {
-                    enemies.push({x: Math.random()*50, y: Math.random()*50, speed: 0.005 + (lvl * 0.003)});
-                }
+            if(lvl <= 5) {
+                document.getElementById('level-text').innerText = `LEVEL ${lvl}: ${lvl < 3 ? 'COLLECT' : 'SURVIVE'}`;
+                // Kisses
+                for(let i=0; i<(2+lvl); i++) dots.push({x: Math.random()*210+20, y: Math.random()*210+20});
+                // Stationary Obstacles (💀)
+                if(lvl >= 2) for(let i=0; i<lvl; i++) obstacles.push({x: Math.random()*210+20, y: Math.random()*210+20});
+                // Chasers (💔)
+                if(lvl >= 3) for(let i=0; i<(lvl-2); i++) enemies.push({x: 10, y: 10, speed: 0.005 + (lvl * 0.002)});
+            } else {
+                // LEVEL 6: THE MEETING
+                document.getElementById('level-text').innerText = "FINAL LEVEL: FIND PLAYER 2";
+                player2.x = 150; player2.y = 125;
             }
         }
 
@@ -164,38 +131,47 @@
             ctx.fillStyle = "black"; ctx.fillRect(0,0,250,250);
             ctx.font = "16px serif";
 
-            // Targets
+            // Draw Kisses
             dots.forEach((d, i) => {
                 ctx.fillText("💋", d.x, d.y);
                 if(Math.hypot(heart.x-d.x, heart.y-d.y) < 18) dots.splice(i, 1);
             });
 
-            // Chasers
+            // Draw Obstacles (Reset if hit)
+            obstacles.forEach(o => {
+                ctx.fillText("💀", o.x, o.y);
+                if(Math.hypot(heart.x-o.x, heart.y-o.y) < 15) initLevel(currentLevel);
+            });
+
+            // Draw Ghosts (Reset if hit)
             enemies.forEach(e => {
                 ctx.fillText("💔", e.x, e.y);
-                e.x += (heart.x - e.x) * e.speed;
-                e.y += (heart.y - e.y) * e.speed;
+                e.x += (heart.x - e.x) * e.speed; e.y += (heart.y - e.y) * e.speed;
                 if(Math.hypot(heart.x-e.x, heart.y-e.y) < 15) initLevel(currentLevel);
             });
 
-            // Player
+            // Draw Player 2
+            if(currentLevel === 6) {
+                ctx.fillText("❤️", player2.x, player2.y);
+                ctx.fillStyle = "white"; ctx.font = "7px 'Press Start 2P'";
+                ctx.fillText("P2", player2.x, player2.y - 10);
+                if(Math.hypot(heart.x-player2.x, heart.y-player2.y) < 15) {
+                    gameRunning = false;
+                    document.getElementById('msg').innerHTML = "YOU WILL ALWAYS BE<br>MY PLAYER 2.<br><br>HAPPY VALENTINE'S DAY!";
+                    return;
+                }
+            }
+
+            // Draw Player 1
+            ctx.font = "16px serif";
             ctx.fillText("❤️", heart.x, heart.y);
             heart.x += heart.dx; heart.y += heart.dy;
             
-            // Bounds
             if(heart.x > 250) heart.x = 0; if(heart.x < 0) heart.x = 250;
             if(heart.y > 250) heart.y = 0; if(heart.y < 0) heart.y = 250;
 
-            if(dots.length === 0) {
-                if(currentLevel < 5) initLevel(currentLevel+1);
-                else { 
-                    gameRunning = false; 
-                    ctx.fillStyle="white"; ctx.font="8px 'Press Start 2P'";
-                    ctx.textAlign = "center";
-                    ctx.fillText("YOU ARE MY HERO!", 125, 125);
-                    document.getElementById('msg').innerHTML = "YOU WON MY HEART!<br>PULL ME CLOSE AND<br>DON'T LET GO.";
-                    return;
-                }
+            if(dots.length === 0 && currentLevel < 6) {
+                initLevel(currentLevel + 1);
             }
             requestAnimationFrame(draw);
         }
@@ -209,11 +185,15 @@
         const no = document.getElementById('no-btn');
         no.onmouseover = no.ontouchstart = (e) => {
             e.preventDefault();
-            no.style.position='fixed'; 
-            no.style.left=Math.random()*70+'vw'; 
-            no.style.top=Math.random()*70+'vh';
-            no.style.zIndex = "1000";
+            no.style.position='fixed'; no.style.left=Math.random()*70+'vw'; no.style.top=Math.random()*70+'vh';
         };
+
+        function updateT() {
+            let diff = new Date(2026, 1, 14) - new Date();
+            let d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            document.getElementById('countdown-intro').innerHTML = `V-DAY COUNTDOWN:<br>${d}D ${h}H ${m}M ${s}S`;
+        }
+        setInterval(updateT, 1000); updateT();
     </script>
 </body>
 </html>
