@@ -1,0 +1,55 @@
+# 1. Define the Logger
+logger = system.util.getLogger('Zebra_Production_Print')
+
+from socket import socket, AF_INET, SOCK_STREAM
+from datetime import datetime
+
+# 2. Configuration
+PRINTER_IP = '172.20.124.11'
+PRINTER_PORT = 9100
+
+# 3. Define Tag Paths (Adjust these to your actual OPC paths)
+base = "[default]Smiths Manufacturing/Plant 1/_Radio_and_Assy_/Controller:Global/"
+tag_paths = [
+    base + "RNA_SM_Model_Num",    # {0} - Large 030
+    base + "RNA_FBO_Active/SM_Part_No", # {1} - Toyota 87010...
+    base + "RNA_Unique_Num"       # {2} - Smiths 2482...
+]
+
+try:
+    # 4. Read Tag Data
+    results = system.tag.readBlocking(tag_paths)
+    model_num = results[0].value
+    toyota_pn = results[1].value
+    smiths_pn = results[2].value
+    
+    # 5. Format Date/Time to match photo (20.04.2026 07h58)
+    now = datetime.now()
+    date_str = now.strftime("%d.%m.%Y")
+    time_str = now.strftime("%Hh%M")
+
+    # 6. Build the ZPL by injecting variables
+    # The order here must match the {0}, {1}, {2}, etc. in the ZPL above
+    zpl_template = """^XA^CI28^FO40,60^A0N,80,80^FD{0}^FS^FO40,150^A0N,35,35^FDTOYOTA^FS^FO40,190^A0N,30,30^FD{1}^FS^FO40,230^A0N,25,25^FD12V EN01^FS^FO40,270^A0N,30,30^FDSMITHS^FS^FO40,305^A0N,15,15^FDMANUFACTURING (PTY) LTD^FS^FO280,60^BXN,6,200^FD{2} {3} {4}^FS^FO40,340^A0N,25,25^FD{2}^FS^FO40,375^A0N,25,25^FD{3} {4}^FS^XZ"""
+    
+    final_zpl = zpl_template.format(model_num, toyota_pn, smiths_pn, date_str, time_str)
+
+    # 7. Socket Communication
+    # This only runs on a positive transition (Triggered)
+    if currentValue.value == True and previousValue.value == False:
+        s = socket(AF_INET, SOCK_STREAM)
+        s.settimeout(2.0)
+        try:
+            s.connect((PRINTER_IP, PRINTER_PORT))
+            s.sendall(final_zpl.encode('utf-8'))
+            logger.info("Label sent to Zebra: %s" % toyota_pn)
+            
+            # Reset Handshake Tag
+            system.tag.writeBlocking([base + "Print_Passed_Label"], [False])
+        except Exception as err:
+            logger.error("Printer connection failed: %s" % str(err))
+        finally:
+            s.close()
+
+except Exception as e:
+    logger.error("Global Script Error: %s" % str(e))
